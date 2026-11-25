@@ -74,18 +74,41 @@ public class RenderThread extends Thread {
     private boolean isLip = false;      // 用于统计是否正在渲染口型
 
     private Reporter mReporter;
+    private int audioSessionId;
 
-    public RenderThread(Context context, File modelDir, RenderSink renderSink, float volume, RenderCallback callback, Reporter reporter) {
+    public RenderThread(Context context, File modelDir, RenderSink renderSink, float volume, RenderCallback callback, Reporter reporter, int audioSessionId) {
         this.mContext = context;
         this.modelDir = modelDir;
         this.mRenderSink = renderSink;
         this.callback = callback;
         this.mReporter = reporter;
         this.mVolume  = volume;
+        this.audioSessionId = audioSessionId;
     }
 
     public void setReporter(Reporter reporter){
         this.mReporter = reporter;
+    }
+
+    public void setAudioSessionId(int audioSessionId) {
+        this.audioSessionId = audioSessionId;
+        audioPlayer = new AudioPlayer(new AudioPlayer.AudioPlayerCallback() {
+            @Override
+            public void onPlayStart() {
+                callback.onPlayStart();
+            }
+
+            @Override
+            public void onPlayEnd() {
+                mCurrentBnfSession = -1;
+                callback.onPlayEnd();
+            }
+
+            @Override
+            public void onPlayError(int code, String message) {
+                callback.onPlayError(code, message);
+            }
+        }, mVolume, audioSessionId);
     }
 
     @Override
@@ -110,7 +133,7 @@ public class RenderThread extends Thread {
             public void onPlayError(int code, String message) {
                 callback.onPlayError(code, message);
             }
-        }, mVolume);
+        }, mVolume, audioSessionId);
 
         scrfdncnn = new DuixNcnn();
         String duixDir = mContext.getExternalFilesDir("duix").getAbsolutePath();
@@ -329,6 +352,13 @@ public class RenderThread extends Thread {
     }
 
     private void handlePushAudio(byte[] data){
+        if (audioPlayer != null && isRendering){
+            scrfdncnn.pushpcm(mCurrentBnfSession, data, data.length, 0);
+            audioPlayer.pushData(ByteBuffer.wrap(data));
+        }
+    }
+
+    private void handlePushAudio(byte[] data, int sessionId){
         if (audioPlayer != null && isRendering){
             scrfdncnn.pushpcm(mCurrentBnfSession, data, data.length, 0);
             audioPlayer.pushData(ByteBuffer.wrap(data));

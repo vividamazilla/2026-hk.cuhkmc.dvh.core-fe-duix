@@ -5,6 +5,7 @@ plugins {
 android {
     namespace 'ai.guiji.duix.sdk.client'
     compileSdk 33
+    ndkVersion = '28.2.13676358'
 
     defaultConfig {
         minSdk 24
@@ -13,7 +14,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                abiFilters 'arm64-v8a', "armeabi-v7a"
+                abiFilters 'arm64-v8a', "armeabi-v7a" //, "x86_64"
                 cppFlags "-std=c++17", "-fexceptions"
                 //arguments "-DANDROID_STL=c++_shared","-DANDROID_TOOLCHAIN=clang"
             }

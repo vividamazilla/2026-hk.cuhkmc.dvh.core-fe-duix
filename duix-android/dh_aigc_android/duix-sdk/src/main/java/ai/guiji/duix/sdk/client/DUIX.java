@@ -24,12 +24,21 @@ public class DUIX {
     private boolean isReady;            // 准备完成的标记
     private float mVolume = 1.0F;
     private RenderThread.Reporter reporter;
+    private int audioSessionId = 0;
 
     public DUIX(Context context, String modelName, RenderSink sink, Callback callback) {
         this.mContext = context;
         this.mCallback = callback;
         this.modelName = modelName;
         this.renderSink = sink;
+    }
+
+    public DUIX(Context context, String modelName, RenderSink sink, int audioSessionId, Callback callback) {
+        this.mContext = context;
+        this.mCallback = callback;
+        this.modelName = modelName;
+        this.renderSink = sink;
+        this.audioSessionId = audioSessionId;
     }
 
     /**
@@ -120,7 +129,7 @@ public class DUIX {
                     mCallback.onEvent(Constant.CALLBACK_EVENT_MOTION_END, "", null);
                 }
             }
-        }, reporter);
+        }, reporter, audioSessionId);
         mRenderThread.setName("DUIXRender-Thread");
         mRenderThread.start();
     }
@@ -136,6 +145,11 @@ public class DUIX {
                 mRenderThread.setVolume(volume);
             }
         }
+    }
+
+    public void setAudioSessionId(int audioSessionId){
+        this.audioSessionId = audioSessionId;
+        mRenderThread.setAudioSessionId(audioSessionId);
     }
 
     public void startPush(){

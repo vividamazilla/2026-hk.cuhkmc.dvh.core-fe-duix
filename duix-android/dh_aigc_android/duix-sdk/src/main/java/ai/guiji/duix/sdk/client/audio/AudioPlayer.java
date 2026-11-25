@@ -28,14 +28,43 @@ public class AudioPlayer {
 
     private ByteBuffer waitNextBuffer;
 
+    private int audioSessionId;
+
     public AudioPlayer(AudioPlayerCallback callback, float volume){
         this.callback = callback;
-        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, // 音频流类型
+        audioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, // STREAM_MUSIC, // 音频流类型
                 sampleRate,
                 channelConfig,
                 audioFormat,
                 bufferSize,
                 AudioTrack.MODE_STREAM); // 流模式
+        if (volume != 1.0F){
+            audioTrack.setVolume(volume);
+        }
+        int minBufferSize = AudioTrack.getMinBufferSize(sampleRate, channelConfig, audioFormat);
+        Logger.d("AudioPlayer init bufferSize: " + bufferSize + " minBufferSize: " + minBufferSize);
+        waitNextBuffer = ByteBuffer.allocate(bufferSize);
+    }
+
+    public AudioPlayer(AudioPlayerCallback callback, float volume, int audioSessionId){
+        this.callback = callback;
+        if (audioSessionId != 0) {
+            audioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, // STREAM_MUSIC, // 音频流类型
+                    sampleRate,
+                    channelConfig,
+                    audioFormat,
+                    bufferSize,
+                    AudioTrack.MODE_STREAM, // 流模式
+                    audioSessionId);
+        } else {
+            audioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, // STREAM_MUSIC, // 音频流类型
+                    sampleRate,
+                    channelConfig,
+                    audioFormat,
+                    bufferSize,
+                    AudioTrack.MODE_STREAM // 流模式
+                    );
+        }
         if (volume != 1.0F){
             audioTrack.setVolume(volume);
         }
